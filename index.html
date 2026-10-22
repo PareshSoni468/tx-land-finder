@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Texas Government & USDA FSA Vacant Land Portal</title>
+​<!-- PWA Web App Manifest -->
+<link rel="manifest" href="data:application/manifest+json;utf8,%7B%22name%22%3A%22TX%20Land%20Finder%22%2C%22short_name%22%3A%22TX%20Land%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F854%2F854878.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+​<!-- Tailwind CSS & FontAwesome -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+​<style>
+/* Custom scrollbar & mobile optimization */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+​<!-- TOP HEADER -->
+<header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
+<div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="bg-amber-500/20 text-amber-400 p-2 rounded-lg border border-amber-500/30">
+<i class="fa-solid fa-map-location-dot text-xl"></i>
+</div>
+<div>
+<h1 class="font-bold text-lg leading-tight text-white flex items-center gap-2">
+TX Land Finder <span class="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] px-1.5 py-0.5 rounded uppercase font-mono">FSA & Tax Land</span>
+</h1>
+<p class="text-xs text-slate-400">USDA Federal Inventory & Texas Struck-Off Parcels</p>
+</div>
+</div>
+​<div class="flex items-center gap-2">
+<button onclick="toggleFsaGuide()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+<i class="fa-solid fa-book-open"></i> <span class="hidden sm:inline">FSA Strategy</span> Guide
+</button>
+<button id="pwaInstallBtn" onclick="installPWA()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md">
+<i class="fa-solid fa-download"></i> Install App
+</button>
+</div>
+</div>
+</header>
+​<!-- FSA STRATEGY MODAL GUIDE -->
+<div id="fsaGuideModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+<button onclick="toggleFsaGuide()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+​<div class="flex items-center gap-3 mb-4">
+<div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-lg border border-amber-500/30">
+<i class="fa-solid fa-landmark text-2xl"></i>
+</div>
+<div>
+<h2 class="text-xl font-bold text-white">USDA FSA Land Buying Playbook</h2>
+<p class="text-xs text-amber-400">Direct Federal Government Real Estate Purchases</p>
+</div>
+</div>
+​<div class="space-y-4 text-xs text-slate-300">
+<div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700">
+<h3 class="font-bold text-amber-300 text-sm mb-1"><i class="fa-solid fa-1"></i> Check Official USDA Resale Portal</h3>
+<p>The USDA Farm Service Agency acquires land through farm loan defaults. Filter state to <strong>Texas</strong> on official portals to see live maps and listings.</p>
+</div>
+​<div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700">
+<h3 class="font-bold text-amber-300 text-sm mb-1"><i class="fa-solid fa-2"></i> Unimproved Vacant Land Filter</h3>
+<p>Focus strictly on tracts with zero houses or barns, direct public county road access, and clear boundaries on county GIS.</p>
+</div>
+​<div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700">
+<h3 class="font-bold text-amber-300 text-sm mb-1"><i class="fa-solid fa-3"></i> Apply the 1/3 Market Value Formula</h3>
+<p>Analyze recent sales comps for adjacent parcels on CAD. Set your maximum sealed offer bid at <strong>33% (one-third)</strong> of neighboring market values.</p>
+</div>
+​<div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700">
+<h3 class="font-bold text-amber-300 text-sm mb-1"><i class="fa-solid fa-4"></i> Submit Written Form FSA-2571</h3>
+<p>There are no live auctions or real estate agent fees. Complete written sealed offer Form FSA-2571 / RD 1955-45 and deliver directly to the designated USDA Farm Loan Manager.</p>
+</div>
+</div>
+​<div class="mt-6 flex justify-end">
+<button onclick="toggleFsaGuide()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">Got It, Let's Search</button>
+</div>
+</div>
+</div>
+​<!-- MAIN BODY LAYOUT -->
+<main class="max-w-7xl mx-auto px-4 py-6 w-full flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6">
+​<!-- SIDEBAR FILTERS -->
+<aside class="lg:col-span-1 space-y-5">
+<div class="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-md space-y-4">
+<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+<span><i class="fa-solid fa-sliders text-amber-400 mr-2"></i> Filters</span>
+<button onclick="resetFilters()" class="text-xs text-amber-400 hover:underline font-normal lowercase">reset</button>
+</h2>
+​<!-- Acquisition Method -->
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Acquisition Source</label>
+<select id="sourceFilter" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+<option value="ALL">All Disposal Methods</option>
+<option value="USDA FSA Inventory">USDA FSA Federal Inventory</option>
+<option value="County Struck-Off">County Struck-Off (OTC)</option>
+<option value="1st Tuesday Tax Foreclosure">1st Tuesday Tax Foreclosure</option>
+<option value="GLO Direct Surplus">Texas GLO Surplus</option>
+</select>
+</div>
+​<!-- County Filter -->
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Texas County</label>
+<select id="countyFilter" onchange="applyFilters()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+<option value="ALL">All Counties</option>
+<option value="Bell County">Bell County</option>
+<option value="Hudspeth County">Hudspeth County</option>
+<option value="Travis County">Travis County</option>
+<option value="Walker County">Walker County</option>
+<option value="Bexar County">Bexar County</option>
+</select>
+</div>
+​<!-- Min/Max Acreage -->
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Acreage Range</label>
+<div class="grid grid-cols-2 gap-2">
+<input type="number" id="minAcres" oninput="applyFilters()" placeholder="Min Acres" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+<input type="number" id="maxAcres" oninput="applyFilters()" placeholder="Max Acres" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+</div>
+</div>
+​<!-- Search Box (ID / Geo Number) -->
+<div>
+<label class="block text-xs font-medium text-slate-300 mb-1.5">Search CAD / Property ID / Geo ID</label>
+<input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="e.g. R-881203-01 or 104829" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500">
+</div>
+</div>
+​<!-- Quick Tips Card -->
+<div class="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl text-xs space-y-2">
+<div class="font-bold text-amber-400 flex items-center gap-1.5">
+<i class="fa-solid fa-lightbulb"></i> Understanding Geo vs Property ID
+</div>
+<p class="text-slate-300 leading-relaxed">
+CAD Account numbers (e.g. <span class="font-mono text-amber-300">R-881203-01</span>) format geographic parcels. Our portal automatically strips hyphens for appraisal lookup systems requiring numeric QuickRef IDs.
+</p>
+</div>
+</aside>
+​<!-- MAIN LISTINGS GRID -->
+<section class="lg:col-span-3 space-y-4">
+<div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+<span class="text-xs text-slate-400">Showing <strong id="resultCount" class="text-white">0</strong> matching properties</span>
+<select id="sortFilter" onchange="applyFilters()" class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none">
+<option value="minBidAsc">Min Bid: Low to High</option>
+<option value="acresDesc">Acreage: Largest First</option>
+<option value="marketDesc">Est Market Value: High to Low</option>
+</select>
+</div>
+​<div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Dynamic Cards Inserted Here -->
+</div>
+</section>
+</main>
+​<!-- OFFER & STEP-BY-STEP WORKFLOW MODAL -->
+<div id="offerModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+<button onclick="closeOfferModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+​<div class="mb-4">
+<span id="modalSourceBadge" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded font-mono uppercase">Source</span>
+<h2 id="modalTitle" class="text-xl font-bold text-white mt-1">14.0 Acres Bell County Parcel</h2>
+<p id="modalSub" class="text-xs text-slate-400 font-mono">Property ID: R-881203-01</p>
+</div>
+​<div id="modalWorkflowBody" class="space-y-4">
+<!-- Dynamic Workflow Content Inserted via JS -->
+</div>
+​<div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-center">
+<button onclick="closeOfferModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold">Close</button>
+<button id="modalActionBtn" onclick="alert('Submission details generated!')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-lg">Print Form FSA-2571</button>
+</div>
+</div>
+</div>
+​<!-- FOOTER -->
+<footer class="bg-slate-900 border-t border-slate-800 mt-8 py-4 text-center text-xs text-slate-500">
+<p>Texas Government & USDA FSA Vacant Land Acquisition Engine • Standalone PWA Enabled</p>
+</footer>
+​<!-- APPLICATION LOGIC SCRIPT -->
+<script>
+// Sample Federal USDA & Texas Tax Land Dataset
+const propertiesData = [
+{
+id: "R-881203-01",
+county: "Bell County",
+type: "USDA FSA Inventory",
+acres: 14.0,
+minBid: 4200,
+marketVal: 12600,
+fsaStatus: "General Public Disposal",
+structures: 0,
+roadAccess: "County Road 120 Frontage",
+fsaOffice: "Bell County USDA Service Center (Temple, TX)",
+description: "14 Acres raw agricultural land acquired via USDA defaulted farm ownership loan foreclosure. Unimproved, zero houses, verified county road side."
+},
+{
+id: "104829",
+county: "Hudspeth County",
+type: "County Struck-Off",
+acres: 20.0,
+minBid: 2900,
+marketVal: 15000,
+fsaStatus: "N/A - Tax Foreclosure",
+structures: 0,
+roadAccess: "Plat Dedicated Easement",
+fsaOffice: "Hudspeth County Tax Assessor",
+description: "Over-the-Counter Struck-Off county property held by local taxing units. Direct tax deed acquisition."
+},
+{
+id: "R-449102-09",
+county: "Walker County",
+type: "USDA FSA Inventory",
+acres: 8.5,
+minBid: 3100,
+marketVal: 9800,
+fsaStatus: "General Public Disposal",
+structures: 0,
+roadAccess: "FM 1374 Roadside",
+fsaOffice: "Walker County USDA Service Center (Huntsville, TX)",
+description: "8.5 Acres timberland tract in inventory. Perfect for agricultural expansion or private holding."
+},
+{
+id: "992104",
+county: "Travis County",
+type: "1st Tuesday Tax Foreclosure",
+acres: 5.2,
+minBid: 11500,
+marketVal: 45000,
+fsaStatus: "N/A - Sheriff Auction",
+structures: 0,
+roadAccess: "Public Paved Road",
+fsaOffice: "Travis County Sheriff Sales",
+description: "Upcoming First Tuesday tax foreclosure auction parcel. Non-homestead raw land."
+}
+];
+​let filteredProperties = [...propertiesData];
+​// Helper: CAD URL Generator handling GeoID vs Property ID
+function getCadSearchUrl(county, rawId) {
+const cleanNumericId = rawId.replace(/[^0-9]/g, '');
+const countyUrls = {
+"Bell County": https://bellcad.org/property-search/?searchVal=${rawId},
+"Travis County": https://stage.traviscad.org/propertydetail/${cleanNumericId},
+"Bexar County": https://bcad.org/property-detail/${cleanNumericId},
+"Hudspeth County": http://www.hudspethcad.org/search.php?id=${rawId},
+"Walker County": https://walkercad.org/search-results/?account=${rawId}
+};
+return countyUrls[county] || https://www.google.com/search?q=${encodeURIComponent(county + " CAD property " + rawId)};
+}
+​// Render Cards Grid
+function renderCards() {
+const grid = document.getElementById("propertyGrid");
+document.getElementById("resultCount").innerText = filteredProperties.length;
+​if (filteredProperties.length === 0) {
+grid.innerHTML = <div class="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-500"> <i class="fa-solid fa-folder-open text-3xl mb-2 text-slate-600"></i> <p>No parcels match your search criteria.</p> </div>;
+return;
+}
+​grid.innerHTML = filteredProperties.map(p => {
+const isFsa = p.type === "USDA FSA Inventory";
+return `
+<div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-md flex flex-col justify-between hover:border-slate-700 transition">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded ${isFsa ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+{p.type}
+</span>
+<span class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-location-dot text-amber-400 mr-1"></i>{p.county}</span>
+</div>
+​<h3 class="text-lg font-bold text-white mb-1">{p.acres} Acres Raw Land</h3>
+<p class="text-xs text-slate-400 mb-3 line-clamp-2">{p.description}</p>
+​<div class="grid grid-cols-2 gap-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 mb-3 text-xs font-mono">
+<div>
+<span class="text-slate-500 block text-[10px]">MIN BID / OFFER</span>
+<span class="text-emerald-400 font-bold text-sm">
