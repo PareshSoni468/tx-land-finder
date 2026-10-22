@@ -347,20 +347,26 @@
     let activeProperty = null;
 
     // Normalizes CAD Numbers and builds direct URL lookup
-    function getCadSearchUrl(county, cadNumber) {
-      const cleanId = cadNumber.replace(/[^0-9]/g, '');
-      const encodedCounty = encodeURIComponent(county + " CAD property " + cadNumber);
+    // Updated 404-proof CAD lookup function
+function getCadSearchUrl(county, cadNumber) {
+  const cleanNumericId = cadNumber.replace(/[^0-9]/g, '');
 
-      const urls = {
-        "Bell County": `https://bellcad.org/property-search/?searchVal=${cadNumber}`,
-        "Travis County": `https://stage.traviscad.org/propertydetail/${cleanId}`,
-        "Bexar County": `https://bcad.org/property-detail/${cleanId}`,
-        "Hudspeth County": `http://www.hudspethcad.org/search.php?id=${cadNumber}`,
-        "Walker County": `https://walkercad.org/search-results/?account=${cadNumber}`
-      };
+  const countySearchPortals = {
+    "Bell County": "https://esearch.bellcad.org/",
+    "Travis County": "https://traviscad.org/propertysearch",
+    "Bexar County": "https://bcad.org/property-search/",
+    "Hudspeth County": "https://esearch.hudspethcad.org/",
+    "Walker County": "https://esearch.walkercad.org/",
+    "El Paso County": `https://epcad.org/PropertyDetail?PropID=${cleanNumericId}`,
+    "Collin County": "https://collinpao.org/",
+    "Denton County": "https://dentoncad.com/property-search"
+  };
 
-      return urls[county] || `https://www.google.com/search?q=${encodedCounty}`;
-    }
+  // Direct fallback to Google search for exact CAD ID if county portal is unlisted
+  const encodedQuery = encodeURIComponent(`${county} CAD property ${cadNumber}`);
+  return countySearchPortals[county] || `https://www.google.com/search?q=${encodedQuery}`;
+}
+
 
     function renderProperties(data) {
       const container = document.getElementById("propertyGrid");
