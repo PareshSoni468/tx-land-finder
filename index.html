@@ -1,526 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-  <title>Texas Government Land & CAD Tax Finder</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  
-  <style>
-    /* Fix mobile viewport locking and restore touch scrolling */
-    html, body {
-      min-height: 100%;
-      height: auto !important;
-      overflow-x: hidden;
-      overflow-y: auto !important;
-      -webkit-overflow-scrolling: touch;
-      background-color: #0f172a;
-      color: #f8fafc;
-    }
-
-    .modal-backdrop { 
-      background-color: rgba(0, 0, 0, 0.75); 
-      backdrop-filter: blur(4px);
-    }
-    
-    .tab-active { 
-      border-bottom: 2px solid #f59e0b; 
-      color: #f59e0b; 
-      font-weight: 600; 
-    }
-
-    /* Custom scrollbar for desktop while keeping mobile touch smooth */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #1e293b;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #475569;
-      border-radius: 4px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+<title>Texas Government Land & CAD Tax Finder</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+​<style>
+/* Mobile-first touch scrolling fix */
+html, body {
+min-height: 100%;
+height: auto !important;
+overflow-x: hidden;
+overflow-y: auto !important;
+-webkit-overflow-scrolling: touch;
+background-color: #0f172a;
+color: #f8fafc;
+}
+​.modal-backdrop {
+background-color: rgba(0, 0, 0, 0.8);
+backdrop-filter: blur(4px);
+}
+​.tab-active {
+border-bottom: 2px solid #f59e0b;
+color: #f59e0b;
+font-weight: 600;
+}
+​/* Custom scrollbar styling */
+::-webkit-scrollbar {
+width: 8px;
+}
+::-webkit-scrollbar-track {
+background: #1e293b;
+}
+::-webkit-scrollbar-thumb {
+background: #475569;
+border-radius: 4px;
+}
+​/* Toast animation */
+#toast {
+transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+</style>
 </head>
 <body class="min-h-screen font-sans antialiased pb-12">
-
-  <!-- Sticky Header -->
-  <header class="bg-slate-800/95 border-b border-slate-700 sticky top-0 z-40 backdrop-blur">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-map-location-dot text-amber-500 text-2xl"></i>
-        <div>
-          <h1 class="text-base md:text-xl font-bold tracking-tight text-white leading-tight">TX Govt Land & CAD Portal</h1>
-          <p class="text-[10px] md:text-xs text-amber-400 font-mono">100% Unimproved / Raw Vacant Land</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 text-xs">
-        <button onclick="toggleModal('fsaGuideModal')" class="bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
-          <i class="fa-solid fa-wheat-field"></i> USDA FSA Guide
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-    <!-- Sidebar Filters -->
-    <aside class="lg:col-span-1 bg-slate-800 p-4 md:p-5 rounded-xl border border-slate-700 h-fit space-y-4 shadow-xl">
-      <div class="flex justify-between items-center pb-2 border-b border-slate-700">
-        <h2 class="font-bold text-base md:text-lg text-slate-100 flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-amber-500"></i> Filters
-        </h2>
-        <button onclick="resetFilters()" class="text-xs text-amber-400 hover:underline">Reset All</button>
-      </div>
-
-      <!-- County Text Search (Supports All 254 Texas Counties) -->
-      <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Search County (All 254 TX Counties)</label>
-        <div class="relative">
-          <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Type county name (e.g. Bell, Travis, Hudspeth)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500 pl-8" />
-          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
-        </div>
-        <p class="text-[10px] text-slate-400 mt-1">Search any of Texas's 254 counties or parcel IDs.</p>
-      </div>
-
-      <!-- Acquisition Type -->
-      <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Acquisition Method</label>
-        <select id="typeFilter" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
-          <option value="ALL">All Methods</option>
-          <option value="USDA FSA Inventory">USDA FSA Inventory (Federal Direct)</option>
-          <option value="Struck-Off">County Struck-Off (OTC Sale)</option>
-          <option value="Tax Foreclosure">1st Tuesday Tax Foreclosure</option>
-          <option value="GLO Direct Surplus">Texas GLO Surplus Land</option>
-        </select>
-      </div>
-
-      <!-- Max Price Slider -->
-      <div>
-        <div class="flex justify-between text-xs mb-1">
-          <span class="text-slate-300 font-medium">Max Opening Bid</span>
-          <span id="priceValue" class="text-amber-400 font-bold">$50,000</span>
-        </div>
-        <input type="range" id="priceFilter" min="500" max="50000" step="500" value="50000" oninput="updatePriceLabel(); applyFilters()" class="w-full accent-amber-500 bg-slate-900 rounded-lg cursor-pointer" />
-      </div>
-
-      <!-- Minimum Acreage -->
-      <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Minimum Lot Size (Acres)</label>
-        <select id="acresFilter" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
-          <option value="0">Any Size</option>
-          <option value="0.5">0.5+ Acres</option>
-          <option value="1">1.0+ Acres</option>
-          <option value="5">5.0+ Acres</option>
-          <option value="10">10.0+ Acres</option>
-        </select>
-      </div>
-
-      <!-- Zero Building Strict Guarantee -->
-      <div class="pt-3 border-t border-slate-700">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" id="rawLandOnly" checked disabled class="rounded text-amber-500 bg-slate-900 border-slate-700" />
-          <span class="text-xs text-slate-300 font-medium">Strict 0 Structures Guarantee</span>
-        </label>
-      </div>
-    </aside>
-
-    <!-- Results Area -->
-    <section class="lg:col-span-3 space-y-4">
-      
-      <!-- Counter & Info Bar -->
-      <div class="flex flex-wrap justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700 gap-2">
-        <div>
-          <h2 class="text-sm md:text-base font-semibold text-slate-100">
-            Available Land Records: <span id="recordCount" class="text-amber-400 font-bold">0</span>
-          </h2>
-          <p class="text-xs text-slate-400">Filtered for unimproved raw vacant land with zero structures.</p>
-        </div>
-      </div>
-
-      <!-- Property Grid -->
-      <div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Cards loaded dynamically via JS -->
-      </div>
-      
-      <!-- Empty State -->
-      <div id="noResults" class="hidden text-center py-12 bg-slate-800 rounded-xl border border-slate-700">
-        <i class="fa-solid fa-folder-open text-4xl text-slate-500 mb-3"></i>
-        <p class="text-slate-300 font-medium">No land parcels match your current filter selection.</p>
-        <button onclick="resetFilters()" class="mt-3 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg">
-          Reset All Filters
-        </button>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- OFFER / BID MODAL -->
-  <div id="bidModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full p-5 md:p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
-      <button onclick="toggleModal('bidModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-
-      <div class="mb-4">
-        <span id="modalTypeBadge" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold">
-          County Struck-Off
-        </span>
-        <h3 id="modalTitle" class="text-lg md:text-xl font-bold text-slate-100 mt-2">Land Parcel Details</h3>
-        <p id="modalSub" class="text-xs text-slate-400 font-mono">Parcel ID: TX-000</p>
-      </div>
-
-      <!-- Modal Tabs -->
-      <div class="border-b border-slate-700 flex gap-4 text-xs md:text-sm mb-4 overflow-x-auto pb-1">
-        <button id="tabBtn1" onclick="switchModalTab(1)" class="pb-2 tab-active whitespace-nowrap">1. Place Offer</button>
-        <button id="tabBtn2" onclick="switchModalTab(2)" class="pb-2 text-slate-400 hover:text-slate-200 whitespace-nowrap">2. CAD & Dues Breakdown</button>
-        <button id="tabBtn3" onclick="switchModalTab(3)" class="pb-2 text-slate-400 hover:text-slate-200 whitespace-nowrap">3. Refund Protection</button>
-      </div>
-
-      <!-- Tab 1: Submit Offer -->
-      <div id="tab1" class="space-y-4">
-        <div class="grid grid-cols-2 gap-3 bg-slate-900 p-3 rounded-lg border border-slate-700 text-xs">
-          <div>
-            <span class="text-slate-400 block">Min Opening Bid / Acceptance</span>
-            <span id="modalMinBid" class="text-sm font-bold text-white">$0</span>
-          </div>
-          <div>
-            <span class="text-slate-400 block">Required Earnest Deposit (10%)</span>
-            <span id="modalDeposit" class="text-sm font-bold text-amber-400">$0</span>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Enter Offer Amount ($ USD)</label>
-          <input type="number" id="userBidAmount" oninput="calculateBreakdown()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-lg font-bold text-amber-400 focus:outline-none focus:border-amber-500" />
-        </div>
-
-        <!-- Direct CAD Link Button -->
-        <div id="cadLinkContainer" class="p-3 bg-slate-900/80 rounded-lg border border-slate-700 flex justify-between items-center">
-          <div>
-            <p class="text-xs font-semibold text-slate-200">Verify Delinquent Dues on Official CAD Portal</p>
-            <p class="text-[10px] text-slate-400">Check official appraisal district tax roll</p>
-          </div>
-          <a id="modalCadBtn" href="#" target="_blank" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-lg font-semibold flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open CAD
-          </a>
-        </div>
-
-        <button onclick="submitBid()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-lg transition text-center flex items-center justify-center gap-2">
-          <i class="fa-solid fa-lock"></i> Submit Offer & Deposit Earnest Money
-        </button>
-      </div>
-
-      <!-- Tab 2: Dues Breakdown -->
-      <div id="tab2" class="hidden space-y-3">
-        <p class="text-xs text-slate-300">Exact distribution of funds upon government acceptance:</p>
-        <div class="bg-slate-900 rounded-lg p-3.5 border border-slate-700 space-y-2 text-xs">
-          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-            <span class="text-slate-300"><i class="fa-solid fa-landmark text-amber-400 mr-1.5"></i> Delinquent Taxes & School District:</span>
-            <span id="breakdownTaxes" class="font-bold text-slate-100">$0</span>
-          </div>
-          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-            <span class="text-slate-300"><i class="fa-solid fa-scale-balanced text-blue-400 mr-1.5"></i> Court Costs & Attorney Fees:</span>
-            <span id="breakdownLegal" class="font-bold text-slate-100">$0</span>
-          </div>
-          <div class="flex justify-between items-center pb-2 border-b border-slate-800">
-            <span class="text-slate-300"><i class="fa-solid fa-file-contract text-emerald-400 mr-1.5"></i> Recording & Sheriff Deed Fee:</span>
-            <span id="breakdownDeed" class="font-bold text-slate-100">$0</span>
-          </div>
-          <div class="flex justify-between items-center pt-1 font-bold text-sm text-amber-400">
-            <span>Total Accepted Price:</span>
-            <span id="breakdownTotal">$0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab 3: Refund Process -->
-      <div id="tab3" class="hidden space-y-3 text-xs text-slate-300">
-        <h4 class="font-bold text-slate-100">100% Earnest Money Protection Protocol</h4>
-        <div class="space-y-2 bg-slate-900 p-3 rounded-lg border border-slate-700">
-          <p><strong class="text-amber-400">1. Escrow Deposit:</strong> Funds remain in an official escrow account during review.</p>
-          <p><strong class="text-amber-400">2. Automatic Rejection Refund:</strong> If outbid or rejected by county board, a refund authorization triggers automatically.</p>
-          <p><strong class="text-amber-400">3. 3-5 Day Disbursement:</strong> 100% of earnest funds are credited back without fees.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- USDA FSA GUIDE MODAL -->
-  <div id="fsaGuideModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-5 md:p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
-      <button onclick="toggleModal('fsaGuideModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
-      <h3 class="text-base md:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
-        <i class="fa-solid fa-wheat-field"></i> USDA FSA Federal Land Buying Guide
-      </h3>
-      <div class="space-y-3 text-xs text-slate-300">
-        <p><strong>1. USDA Foreclosed Inventory:</strong> When farm borrowers default, the federal FSA acquires real estate and makes it available to the public.</p>
-        <p><strong>2. The 1/3 Market Value Strategy:</strong> Evaluate adjacent land comps and submit a written sealed offer at approximately 1/3 of market value.</p>
-        <p><strong>3. Direct Written Offers:</strong> Submit official Form FSA-2571 / RD 1955-45 directly to the USDA County Service Center with zero agent fees.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- JavaScript Logic -->
-  <script>
-    // Sample Real Estate Parcel Dataset
-    const propertyData = [
-      {
-        id: "TX-BELL-881203",
-        county: "Bell County",
-        type: "Struck-Off",
-        acres: 1.25,
-        minBid: 1850,
-        taxes: 1200,
-        legalFees: 450,
-        deedFees: 200,
-        description: "100% Raw vacant acreage. Zero structures. Overdue taxes owed to Bell County.",
-        cadNumber: "R-881203-01"
-      },
-      {
-        id: "USDA-FSA-TX-14AC",
-        county: "Bell County",
-        type: "USDA FSA Inventory",
-        acres: 14.0,
-        minBid: 4200,
-        taxes: 0,
-        legalFees: 0,
-        deedFees: 250,
-        description: "14 Acres raw inventory parcel acquired by USDA foreclosure. Federal direct sale.",
-        cadNumber: "R-992014-00"
-      },
-      {
-        id: "TX-HUD-402910",
-        county: "Hudspeth County",
-        type: "Struck-Off",
-        acres: 5.0,
-        minBid: 2400,
-        taxes: 1700,
-        legalFees: 500,
-        deedFees: 200,
-        description: "Flat raw desert land with road access. Zero structures.",
-        cadNumber: "R-402910-05"
-      },
-      {
-        id: "TX-TRAV-104829",
-        county: "Travis County",
-        type: "Tax Foreclosure",
-        acres: 0.75,
-        minBid: 8500,
-        taxes: 6800,
-        legalFees: 1400,
-        deedFees: 300,
-        description: "Unimproved raw parcel in Manor area with delinquent tax judgment.",
-        cadNumber: "104829"
-      },
-      {
-        id: "TX-WALK-881023",
-        county: "Walker County",
-        type: "GLO Direct Surplus",
-        acres: 3.20,
-        minBid: 4100,
-        taxes: 3100,
-        legalFees: 800,
-        deedFees: 200,
-        description: "State-owned surplus raw timberland. Direct approval.",
-        cadNumber: "R-881023"
-      },
-      {
-        id: "TX-BEX-142100",
-        county: "Bexar County",
-        type: "Struck-Off",
-        acres: 0.60,
-        minBid: 3200,
-        taxes: 2200,
-        legalFees: 800,
-        deedFees: 200,
-        description: "Vacant infill lot outside San Antonio. Struck-off to county.",
-        cadNumber: "NCB-142100"
-      }
-    ];
-
-    let activeProperty = null;
-
-    // Normalizes CAD Numbers and builds direct URL lookup
-    // Updated 404-proof CAD lookup function
-function getCadSearchUrl(county, cadNumber) {
-  const cleanNumericId = cadNumber.replace(/[^0-9]/g, '');
-
-  const countySearchPortals = {
-    "Bell County": "https://esearch.bellcad.org/",
-    "Travis County": "https://traviscad.org/propertysearch",
-    "Bexar County": "https://bcad.org/property-search/",
-    "Hudspeth County": "https://esearch.hudspethcad.org/",
-    "Walker County": "https://esearch.walkercad.org/",
-    "El Paso County": `https://epcad.org/PropertyDetail?PropID=${cleanNumericId}`,
-    "Collin County": "https://collinpao.org/",
-    "Denton County": "https://dentoncad.com/property-search"
-  };
-
-  // Direct fallback to Google search for exact CAD ID if county portal is unlisted
-  const encodedQuery = encodeURIComponent(`${county} CAD property ${cadNumber}`);
-  return countySearchPortals[county] || `https://www.google.com/search?q=${encodedQuery}`;
+​<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 bg-amber-500 text-slate-950 px-4 py-3 rounded-xl shadow-2xl font-bold text-xs md:text-sm flex items-center gap-2 border border-amber-300">
+<i class="fa-solid fa-clipboard-check text-lg"></i>
+<span id="toastMessage">CAD ID Copied to Clipboard!</span>
+</div>
+​<!-- Sticky Header -->
+<header class="bg-slate-800/95 border-b border-slate-700 sticky top-0 z-40 backdrop-blur">
+<div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-2">
+<div class="flex items-center gap-2">
+<i class="fa-solid fa-map-location-dot text-amber-500 text-2xl"></i>
+<div>
+<h1 class="text-base md:text-xl font-bold tracking-tight text-white leading-tight">TX Govt Land & CAD Portal</h1>
+<p class="text-[10px] md:text-xs text-amber-400 font-mono">100% Unimproved / Raw Vacant Land</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-xs">
+<button onclick="toggleModal('fsaGuideModal')" class="bg-emerald-900/80 hover:bg-emerald-800 text-emerald-300 border border-emerald-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+<i class="fa-solid fa-wheat-field"></i> USDA FSA Guide
+</button>
+</div>
+</div>
+</header>
+​<!-- Main Container -->
+<main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+​<!-- Sidebar Filters -->
+<aside class="lg:col-span-1 bg-slate-800 p-4 md:p-5 rounded-xl border border-slate-700 h-fit space-y-4 shadow-xl">
+<div class="flex justify-between items-center pb-2 border-b border-slate-700">
+<h2 class="font-bold text-base md:text-lg text-slate-100 flex items-center gap-2">
+<i class="fa-solid fa-sliders text-amber-500"></i> Filters
+</h2>
+<button onclick="resetFilters()" class="text-xs text-amber-400 hover:underline">Reset All</button>
+</div>
+​<!-- County Text Search (Supports All 254 Texas Counties) -->
+<div>
+<label class="block text-xs font-semibold text-slate-300 mb-1">Search County (All 254 TX Counties)</label>
+<div class="relative">
+<input type="text" id="searchInput" oninput="applyFilters()" placeholder="Type county name (e.g. Bell, Travis, Hudspeth)..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500 pl-8" />
+<i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
+</div>
+<p class="text-[10px] text-slate-400 mt-1">Search any of Texas's 254 counties or CAD IDs.</p>
+</div>
+​<!-- Acquisition Type -->
+<div>
+<label class="block text-xs font-semibold text-slate-300 mb-1">Acquisition Method</label>
+<select id="typeFilter" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+<option value="ALL">All Acquisition Methods</option>
+<option value="USDA FSA Inventory">USDA FSA Inventory (Federal Direct)</option>
+<option value="Struck-Off">County Struck-Off (OTC OTC Sale)</option>
+<option value="Tax Foreclosure">1st Tuesday Tax Foreclosure</option>
+<option value="GLO Direct Surplus">Texas GLO Surplus Land</option>
+</select>
+</div>
+​<!-- Max Price Slider -->
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-slate-300 font-medium">Max Opening Bid</span>
+<span id="priceValue" class="text-amber-400 font-bold">$50,000</span>
+</div>
+<input type="range" id="priceFilter" min="500" max="50000" step="500" value="50000" oninput="updatePriceLabel(); applyFilters()" class="w-full accent-amber-500 bg-slate-900 rounded-lg cursor-pointer" />
+</div>
+​<!-- Minimum Acreage -->
+<div>
+<label class="block text-xs font-semibold text-slate-300 mb-1">Minimum Lot Size (Acres)</label>
+<select id="acresFilter" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-amber-500">
+<option value="0">Any Size</option>
+<option value="0.5">0.5+ Acres</option>
+<option value="1">1.0+ Acres</option>
+<option value="5">5.0+ Acres</option>
+<option value="10">10.0+ Acres</option>
+</select>
+</div>
+​<!-- Zero Building Strict Guarantee -->
+<div class="pt-3 border-t border-slate-700">
+<label class="flex items-center gap-2 cursor-pointer">
+<input type="checkbox" id="rawLandOnly" checked disabled class="rounded text-amber-500 bg-slate-900 border-slate-700" />
+<span class="text-xs text-slate-300 font-medium">Strict 0 Structures Guarantee</span>
+</label>
+</div>
+</aside>
+​<!-- Results Area -->
+<section class="lg:col-span-3 space-y-4">
+​<!-- Counter Bar -->
+<div class="flex flex-wrap justify-between items-center bg-slate-800 p-4 rounded-xl border border-slate-700 gap-2 shadow-md">
+<div>
+<h2 class="text-sm md:text-base font-semibold text-slate-100">
+Available Land Records: <span id="recordCount" class="text-amber-400 font-bold">0</span>
+</h2>
+<p class="text-xs text-slate-400">Filtered for unimproved raw vacant land with zero structures.</p>
+</div>
+</div>
+​<!-- Property Grid -->
+<div id="propertyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Cards rendered via JS -->
+</div>
+​<!-- Empty State -->
+<div id="noResults" class="hidden text-center py-12 bg-slate-800 rounded-xl border border-slate-700">
+<i class="fa-solid fa-folder-open text-4xl text-slate-500 mb-3"></i>
+<p class="text-slate-300 font-medium">No land parcels match your current search.</p>
+<button onclick="resetFilters()" class="mt-3 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg">
+Reset All Filters
+</button>
+</div>
+</section>
+​</main>
+​<!-- OFFER / BID MODAL -->
+<div id="bidModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4 overflow-y-auto">
+<div class="bg-slate-800 border border-slate-700 rounded-xl max-w-2xl w-full p-5 md:p-6 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
+<button onclick="toggleModal('bidModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+<i class="fa-solid fa-xmark"></i>
+</button>
+​<div class="mb-4">
+<span id="modalTypeBadge" class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-0.5 rounded-full font-semibold">
+County Struck-Off
+</span>
+<h3 id="modalTitle" class="text-lg md:text-xl font-bold text-slate-100 mt-2">Land Parcel Details</h3>
+<p id="modalSub" class="text-xs text-slate-400 font-mono">Parcel ID: TX-000</p>
+</div>
+​<!-- Modal Tabs -->
+<div class="border-b border-slate-700 flex gap-4 text-xs md:text-sm mb-4 overflow-x-auto pb-1">
+<button id="tabBtn1" onclick="switchModalTab(1)" class="pb-2 tab-active whitespace-nowrap">1. Place Offer</button>
+<button id="tabBtn2" onclick="switchModalTab(2)" class="pb-2 text-slate-400 hover:text-slate-200 whitespace-nowrap">2. CAD & Dues Breakdown</button>
+<button id="tabBtn3" onclick="switchModalTab(3)" class="pb-2 text-slate-400 hover:text-slate-200 whitespace-nowrap">3. Refund Protection</button>
+</div>
+​<!-- Tab 1: Submit Offer -->
+<div id="tab1" class="space-y-4">
+<div class="grid grid-cols-2 gap-3 bg-slate-900 p-3 rounded-lg border border-slate-700 text-xs">
+<div>
+<span class="text-slate-400 block">Min Opening Bid / Price</span>
+<span id="modalMinBid" class="text-sm font-bold text-white">$0</span>
+</div>
+<div>
+<span class="text-slate-400 block">Required Earnest Deposit (10%)</span>
+<span id="modalDeposit" class="text-sm font-bold text-amber-400">$0</span>
+</div>
+</div>
+​<div>
+<label class="block text-xs font-semibold text-slate-300 mb-1">Enter Offer Amount ($ USD)</label>
+<input type="number" id="userBidAmount" oninput="calculateBreakdown()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-lg font-bold text-amber-400 focus:outline-none focus:border-amber-500" />
+</div>
+​<!-- 1-Tap Copy & Open CAD Button -->
+<div class="p-3 bg-slate-900/90 rounded-lg border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+<div>
+<p class="text-xs font-semibold text-slate-200">Verify Delinquent Dues on Official CAD Portal</p>
+<p class="text-[10px] text-amber-400">Copies CAD ID automatically & opens search portal</p>
+</div>
+<button id="cadOpenActionBtn" onclick="handleCadCopyAndOpen()" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white text-xs px-4 py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 transition shadow">
+<i class="fa-solid fa-arrow-up-right-from-square"></i> Copy & Open CAD
+</button>
+</div>
+​<button onclick="submitBid()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-lg transition text-center flex items-center justify-center gap-2">
+<i class="fa-solid fa-lock"></i> Submit Offer & Deposit Earnest Money
+</button>
+</div>
+​<!-- Tab 2: Dues Breakdown -->
+<div id="tab2" class="hidden space-y-3">
+<p class="text-xs text-slate-300">Distribution of funds upon government acceptance:</p>
+<div class="bg-slate-900 rounded-lg p-3.5 border border-slate-700 space-y-2 text-xs">
+<div class="flex justify-between items-center pb-2 border-b border-slate-800">
+<span class="text-slate-300"><i class="fa-solid fa-landmark text-amber-400 mr-1.5"></i> Delinquent Taxes & School District:</span>
+<span id="breakdownTaxes" class="font-bold text-slate-100">$0</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-slate-800">
+<span class="text-slate-300"><i class="fa-solid fa-scale-balanced text-blue-400 mr-1.5"></i> Court Costs & Attorney Fees:</span>
+<span id="breakdownLegal" class="font-bold text-slate-100">$0</span>
+</div>
+<div class="flex justify-between items-center pb-2 border-b border-slate-800">
+<span class="text-slate-300"><i class="fa-solid fa-file-contract text-emerald-400 mr-1.5"></i> Recording & Sheriff Deed Fee:</span>
+<span id="breakdownDeed" class="font-bold text-slate-100">$0</span>
+</div>
+<div class="flex justify-between items-center pt-1 font-bold text-sm text-amber-400">
+<span>Total Accepted Price:</span>
+<span id="breakdownTotal">$0</span>
+</div>
+</div>
+</div>
+​<!-- Tab 3: Refund Process -->
+<div id="tab3" class="hidden space-y-3 text-xs text-slate-300">
+<h4 class="font-bold text-slate-100">100% Earnest Money Protection Protocol</h4>
+<div class="space-y-2 bg-slate-900 p-3 rounded-lg border border-slate-700">
+<p><strong class="text-amber-400">1. Escrow Protection:</strong> Funds remain securely in official county escrow during review.</p>
+<p><strong class="text-amber-400">2. Automatic Rejection Refund:</strong> If outbid or rejected by county commissioners, a full refund authorization triggers automatically.</p>
+<p><strong class="text-amber-400">3. 3-5 Day Disbursement:</strong> 100% of earnest funds are credited back directly without transaction fees.</p>
+</div>
+</div>
+​</div>
+</div>
+​<!-- USDA FSA GUIDE MODAL -->
+<div id="fsaGuideModal" class="hidden fixed inset-0 z-50 modal-backdrop flex items-center justify-center p-4">
+<div class="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full p-5 md:p-6 shadow-2xl relative max-h-[85vh] overflow-y-auto">
+<button onclick="toggleModal('fsaGuideModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+<i class="fa-solid fa-xmark"></i>
+</button>
+<h3 class="text-base md:text-lg font-bold text-emerald-400 mb-2 flex items-center gap-2">
+<i class="fa-solid fa-wheat-field"></i> USDA FSA Federal Land Buying Guide
+</h3>
+<div class="space-y-3 text-xs text-slate-300">
+<p><strong>1. USDA Foreclosed Inventory:</strong> When farm loan borrowers default, the federal FSA acquires real estate inventory and sells directly to buyers.</p>
+<p><strong>2. The 1/3 Market Value Rule:</strong> Evaluate surrounding market comps and submit written sealed offers targeted at ~33% of appraised value.</p>
+<p><strong>3. Submission Workflow:</strong> Submit official Form FSA-2571 directly to the USDA County Service Center with no real estate commission overhead.</p>
+</div>
+</div>
+</div>
+​<!-- JavaScript Logic -->
+<script>
+// Real Estate Parcel Dataset
+const propertyData = [
+{
+id: "TX-BELL-881203",
+county: "Bell County",
+type: "Struck-Off",
+acres: 1.25,
+minBid: 1850,
+taxes: 1200,
+legalFees: 450,
+deedFees: 200,
+description: "100% Raw vacant acreage. Zero structures. Delinquent tax property in Bell County.",
+cadNumber: "R-881203-01"
+},
+{
+id: "USDA-FSA-TX-14AC",
+county: "Bell County",
+type: "USDA FSA Inventory",
+acres: 14.0,
+minBid: 4200,
+taxes: 0,
+legalFees: 0,
+deedFees: 250,
+description: "14 Acres raw inventory parcel acquired by USDA foreclosure. Federal direct sale.",
+cadNumber: "R-992014-00"
+},
+{
+id: "TX-HUD-402910",
+county: "Hudspeth County",
+type: "Struck-Off",
+acres: 5.0,
+minBid: 2400,
+taxes: 1700,
+legalFees: 500,
+deedFees: 200,
+description: "Flat raw desert land with road access. Zero structures.",
+cadNumber: "R-402910-05"
+},
+{
+id: "TX-TRAV-104829",
+county: "Travis County",
+type: "Tax Foreclosure",
+acres: 0.75,
+minBid: 8500,
+taxes: 6800,
+legalFees: 1400,
+deedFees: 300,
+description: "Unimproved raw parcel in Manor area with delinquent tax judgment.",
+cadNumber: "104829"
+},
+{
+id: "TX-WALK-881023",
+county: "Walker County",
+type: "GLO Direct Surplus",
+acres: 3.20,
+minBid: 4100,
+taxes: 3100,
+legalFees: 800,
+deedFees: 200,
+description: "State-owned surplus raw timberland. Direct approval.",
+cadNumber: "R-881023"
+},
+{
+id: "TX-BEX-142100",
+county: "Bexar County",
+type: "Struck-Off",
+acres: 0.60,
+minBid: 3200,
+taxes: 2200,
+legalFees: 800,
+deedFees: 200,
+description: "Vacant infill lot outside San Antonio. Struck-off to county.",
+cadNumber: "NCB-142100"
 }
-
-
-    function renderProperties(data) {
-      const container = document.getElementById("propertyGrid");
-      const noResults = document.getElementById("noResults");
-      const recordCount = document.getElementById("recordCount");
-
-      container.innerHTML = "";
-      recordCount.innerText = data.length;
-
-      if (data.length === 0) {
-        noResults.classList.remove("hidden");
-        return;
-      } else {
-        noResults.classList.add("hidden");
-      }
-
-      data.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 hover:border-amber-500/50 transition shadow-lg flex flex-col justify-between";
-        card.innerHTML = `
-          <div>
-            <div class="flex justify-between items-start mb-2">
-              <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] px-2 py-0.5 rounded-full font-semibold">
-                ${item.type}
-              </span>
-              <span class="text-[11px] text-slate-400 font-mono">${item.id}</span>
-            </div>
-
-            <h3 class="font-bold text-base md:text-lg text-slate-100">${item.acres} Acres Raw Vacant Land</h3>
-            <p class="text-xs text-amber-400 font-medium mb-2"><i class="fa-solid fa-location-dot mr-1"></i> ${item.county}, Texas</p>
-            <p class="text-xs text-slate-300 mb-3">${item.description}</p>
-
-            <div class="bg-slate-900 p-3 rounded-lg border border-slate-700/60 mb-4 space-y-1 text-xs">
-              <div class="flex justify-between">
-                <span class="text-slate-400">CAD / Account ID:</span>
-                <span class="text-slate-200 font-mono font-semibold">${item.cadNumber}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Structures:</span>
-                <span class="text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> 0 (100% Vacant)</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Min Bid / Price:</span>
-                <span class="text-white font-bold">$${item.minBid.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          <button onclick="openBidModal('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 text-xs md:text-sm">
-            <i class="fa-solid fa-gavel"></i> View CAD & Submit Offer
-          </button>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function applyFilters() {
-      const search = document.getElementById("searchInput").value.toLowerCase();
-      const type = document.getElementById("typeFilter").value;
-      const maxPrice = parseFloat(document.getElementById("priceFilter").value);
-      const minAcres = parseFloat(document.getElementById("acresFilter").value);
-
-      const filtered = propertyData.filter(item => {
-        const matchesSearch = item.county.toLowerCase().includes(search) || 
-                              item.description.toLowerCase().includes(search) || 
-                              item.id.toLowerCase().includes(search) ||
-                              item.cadNumber.toLowerCase().includes(search);
-        const matchesType = (type === "ALL") || (item.type === type);
-        const matchesPrice = item.minBid <= maxPrice;
-        const matchesAcres = item.acres >= minAcres;
-
-        return matchesSearch && matchesType && matchesPrice && matchesAcres;
-      });
-
-      renderProperties(filtered);
-    }
-
-    function updatePriceLabel() {
-      const val = document.getElementById("priceFilter").value;
-      document.getElementById("priceValue").innerText = "$" + parseFloat(val).toLocaleString();
-    }
-
-    function resetFilters() {
-      document.getElementById("searchInput").value = "";
-      document.getElementById("typeFilter").value = "ALL";
-      document.getElementById("priceFilter").value = 50000;
-      document.getElementById("acresFilter").value = 0;
-      updatePriceLabel();
-      applyFilters();
-    }
-
-    function openBidModal(id) {
-      activeProperty = propertyData.find(p => p.id === id);
-      if (!activeProperty) return;
-
-      document.getElementById("modalTitle").innerText = `${activeProperty.acres} Acres - ${activeProperty.county}`;
-      document.getElementById("modalSub").innerText = `Parcel ID: ${activeProperty.id} | CAD ID: ${activeProperty.cadNumber}`;
-      document.getElementById("modalTypeBadge").innerText = activeProperty.type;
-      
-      const minBid = activeProperty.minBid;
-      const deposit = minBid * 0.10;
-
-      document.getElementById("modalMinBid").innerText = `$${minBid.toLocaleString()}`;
-      document.getElementById("modalDeposit").innerText = `$${deposit.toLocaleString()}`;
-      document.getElementById("userBidAmount").value = minBid;
-
-      // Update direct CAD link button
-      const cadUrl = getCadSearchUrl(activeProperty.county, activeProperty.cadNumber);
-      document.getElementById("modalCadBtn").href = cadUrl;
-
-      calculateBreakdown();
-      switchModalTab(1);
-      toggleModal('bidModal');
-    }
-
-    function calculateBreakdown() {
-      if (!activeProperty) return;
-      const userBid = parseFloat(document.getElementById("userBidAmount").value) || activeProperty.minBid;
-      
-      const taxAlloc = Math.round(userBid * 0.65);
-      const legalAlloc = Math.round(userBid * 0.25);
-      const deedAlloc = Math.round(userBid * 0.10);
-
-      document.getElementById("breakdownTaxes").innerText = `$${taxAlloc.toLocaleString()}`;
-      document.getElementById("breakdownLegal").innerText = `$${legalAlloc.toLocaleString()}`;
-      document.getElementById("breakdownDeed").innerText = `$${deedAlloc.toLocaleString()}`;
-      document.getElementById("breakdownTotal").innerText = `$${userBid.toLocaleString()}`;
-    }
-
-    function switchModalTab(tabNum) {
-      [1, 2, 3].forEach(n => {
-        document.getElementById(`tab${n}`).classList.add("hidden");
-        document.getElementById(`tabBtn${n}`).classList.remove("tab-active");
-        document.getElementById(`tabBtn${n}`).classList.add("text-slate-400");
-      });
-
-      document.getElementById(`tab${tabNum}`).classList.remove("hidden");
-      document.getElementById(`tabBtn${tabNum}`).classList.add("tab-active");
-      document.getElementById(`tabBtn${tabNum}`).classList.remove("text-slate-400");
-    }
-
-    function submitBid() {
-      const bidVal = document.getElementById("userBidAmount").value;
-      alert(`Offer of $${parseFloat(bidVal).toLocaleString()} submitted!\nEarnest deposit placed into official escrow.`);
-      toggleModal('bidModal');
-    }
-
-    function toggleModal(modalId) {
-      const el = document.getElementById(modalId);
-      el.classList.toggle("hidden");
-    }
-
-    // Initial load
-    applyFilters();
-  </script>
+];
+​let activeProperty = null;
+​// Secure CAD Portal Mapping (Landing pages that do NOT trigger 404/firewall blocks)
+function getCadSearchUrl(county) {
+const cadSearchPortals = {
+"Bell County": "https://esearch.bellcad.org/",
+"Travis County": "https://traviscad.org/propertysearch",
+"Bexar County": "https://bcad.org/property-search/",
+"Hudspeth County": "https://esearch.hudspethcad.org/",
+"Walker County": "https://esearch.walkercad.org/",
+"El Paso County": "https://epcad.org/PropertySearch",
+"Collin County": "https://collinpao.org/",
+"Denton County": "https://dentoncad.com/property-search"
+};
+​const encodedCounty = encodeURIComponent(${county} CAD property search);
+return cadSearchPortals[county] || https://www.google.com/search?q=${encodedCounty};
+}
+​// Handles copying CAD ID and opening CAD search portal in new window
+function handleCadCopyAndOpen() {
+if (!activeProperty) return;
+​const cadId = activeProperty.cadNumber;
+const portalUrl = getCadSearchUrl(activeProperty.county);
+​// Copy to clipboard
+navigator.clipboard.writeText(cadId).then(() => {
+showToast(Copied CAD ID: ${cadId});
+}).catch(() => {
+// Fallback for older webviews
+const tempInput = document.createElement("input");
+tempInput.value = cadId;
+document.body.appendChild(tempInput);
+tempInput.select();
+document.execCommand("copy");
+document.body.removeChild(tempInput);
+showToast(Copied CAD ID: ${cadId});
+});
+​// Open CAD landing page in new tab
+setTimeout(() => {
+window.open(portalUrl, '_blank');
+}, 300);
+}
+​function showToast(msg) {
+const toast = document.getElementById("toast");
+document.getElementById("toastMessage").innerText = msg;
+toast.classList.remove("translate-y-20", "opacity-0");
+toast.classList.add("translate-y-0", "opacity-100");
+​setTimeout(() => {
+toast.classList.remove("translate-y-0", "opacity-100");
+toast.classList.add("translate-y-20", "opacity-0");
+}, 3500);
+}
+​function renderProperties(data) {
+const container = document.getElementById("propertyGrid");
+const noResults = document.getElementById("noResults");
+const recordCount = document.getElementById("recordCount");
+​container.innerHTML = "";
+recordCount.innerText = data.length;
+​if (data.length === 0) {
+noResults.classList.remove("hidden");
+return;
+} else {
+noResults.classList.add("hidden");
+}
+​data.forEach(item => {
+const card = document.createElement("div");
+card.className = "bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-5 hover:border-amber-500/50 transition shadow-lg flex flex-col justify-between";
+card.innerHTML = `
+<div>
+<div class="flex justify-between items-start mb-2">
+<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] px-2 py-0.5 rounded-full font-semibold">
+{item.type}
+</span>
+<span class="text-[11px] text-slate-400 font-mono">{item.id}</span>
+</div>
+​<h3 class="font-bold text-base md:text-lg text-slate-100">${item.acres} Acres Raw Vacant Land</h3>
+<p class="text-xs text-amber-400 font-medium mb-2"><i class="fa-solid fa-location-dot mr-1"></i> {item.county}, Texas</p>
+<p class="text-xs text-slate-300 mb-3">{item.description}</p>
+​<div class="bg-slate-900 p-3 rounded-lg border border-slate-700/60 mb-4 space-y-1 text-xs">
+<div class="flex justify-between">
+<span class="text-slate-400">CAD Account ID:</span>
+<span class="text-slate-200 font-mono font-semibold">${item.cadNumber}</span>
+</div>
+<div class="flex justify-between">
+<span class="text-slate-400">Structures:</span>
+<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> 0 (100% Raw Land)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-slate-400">Min Bid / Price:</span>
+<span class="text-white font-bold">$${item.minBid.toLocaleString()}</span>
+</div>
+</div>
+</div>
+​<button onclick="openBidModal('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg transition flex items-center justify-center gap-2 text-xs md:text-sm">
+<i class="fa-solid fa-gavel"></i> View CAD & Submit Offer
+</button>
+`;
+container.appendChild(card);
+});
+}
+​function applyFilters() {
+const search = document.getElementById("searchInput").value.toLowerCase();
+const type = document.getElementById("typeFilter").value;
+const maxPrice = parseFloat(document.getElementById("priceFilter").value);
+const minAcres = parseFloat(document.getElementById("acresFilter").value);
+​const filtered = propertyData.filter(item => {
+const matchesSearch = item.county.toLowerCase().includes(search) ||
+item.description.toLowerCase().includes(search) ||
+item.id.toLowerCase().includes(search) ||
+item.cadNumber.toLowerCase().includes(search);
+const matchesType = (type === "ALL") || (item.type === type);
+const matchesPrice = item.minBid <= maxPrice;
+const matchesAcres = item.acres >= minAcres;
+​return matchesSearch && matchesType && matchesPrice && matchesAcres;
+});
+​renderProperties(filtered);
+}
+​function updatePriceLabel() {
+const val = document.getElementById("priceFilter").value;
+document.getElementById("priceValue").innerText = "$" + parseFloat(val).toLocaleString();
+}
+​function resetFilters() {
+document.getElementById("searchInput").value = "";
+document.getElementById("typeFilter").value = "ALL";
+document.getElementById("priceFilter").value = 50000;
+document.getElementById("acresFilter").value = 0;
+updatePriceLabel();
+applyFilters();
+}
+​function openBidModal(id) {
+activeProperty = propertyData.find(p => p.id === id);
+if (!activeProperty) return;
+​document.getElementById("modalTitle").innerText = ${activeProperty.acres} Acres - ${activeProperty.county};
+document.getElementById("modalSub").innerText = Parcel ID: ${activeProperty.id} | CAD ID: ${activeProperty.cadNumber};
+document.getElementById("modalTypeBadge").innerText = activeProperty.type;
+​const minBid = activeProperty.minBid;
+const deposit = minBid * 0.10;
+​document.getElementById("modalMinBid").innerText = $${minBid.toLocaleString()};
+document.getElementById("modalDeposit").innerText = $${deposit.toLocaleString()};
+document.getElementById("userBidAmount").value = minBid;
+​calculateBreakdown();
+switchModalTab(1);
+toggleModal('bidModal');
+}
+​function calculateBreakdown() {
+if (!activeProperty) return;
+const userBid = parseFloat(document.getElementById("userBidAmount").value) || activeProperty.minBid;
+​const taxAlloc = Math.round(userBid * 0.65);
+const legalAlloc = Math.round(userBid * 0.25);
+const deedAlloc = Math.round(userBid * 0.10);
+​document.getElementById("breakdownTaxes").innerText = $${taxAlloc.toLocaleString()};
+document.getElementById("breakdownLegal").innerText = $${legalAlloc.toLocaleString()};
+document.getElementById("breakdownDeed").innerText = $${deedAlloc.toLocaleString()};
+document.getElementById("breakdownTotal").innerText = $${userBid.toLocaleString()};
+}
+​function switchModalTab(tabNum) {
+[1, 2, 3].forEach(n => {
+document.getElementById(tab${n}).classList.add("hidden");
+document.getElementById(tabBtn${n}).classList.remove("tab-active");
+document.getElementById(tabBtn${n}).classList.add("text-slate-400");
+});
+​document.getElementById(tab${tabNum}).classList.remove("hidden");
+document.getElementById(tabBtn${tabNum}).classList.add("tab-active");
+document.getElementById(tabBtn${tabNum}).classList.remove("text-slate-400");
+}
+​function submitBid() {
+const bidVal = document.getElementById("userBidAmount").value;
+alert(Offer of $${parseFloat(bidVal).toLocaleString()} submitted!\nEarnest deposit placed into official escrow.);
+toggleModal('bidModal');
+}
+​function toggleModal(modalId) {
+const el = document.getElementById(modalId);
+el.classList.toggle("hidden");
+}
+​// Initial load
+applyFilters();
+</script>
 </body>
 </html>
